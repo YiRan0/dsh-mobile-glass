@@ -1,0 +1,28 @@
+{
+  "name": "dsh-mobile-glass",
+  "version": "0.1.0",
+  "description": "DSH Web 移动端适配：液态玻璃视觉、聊天页在上/侧栏在下的 reveal 抽屉、详情玻璃抽屉、composer 与头部修复；桌面端零影响。",
+  "type": "module",
+  "main": "lib/index.js",
+  "exports": {
+    ".": {
+      "default": "./lib/index.js"
+    },
+    "./client": {
+      "default": "./lib/client.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "dsh": {
+    "client": {
+      "inject": [
+        "@deepseek-ai/dsh-client-runtime"
+      ],
+      "platform": "web"
+    }
+  },
+  "files": [
+    "lib"
+  ],
+  "license": "MIT"
+}
