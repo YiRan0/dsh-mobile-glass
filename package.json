@@ -2,6 +2,15 @@
   "name": "dsh-mobile-glass",
   "version": "0.1.0",
   "description": "DSH Web 移动端适配：液态玻璃视觉、聊天页在上/侧栏在下的 reveal 抽屉、详情玻璃抽屉、composer 与头部修复；桌面端零影响。",
+  "keywords": [
+    "dsh",
+    "deepseek-harness",
+    "plugin",
+    "web",
+    "mobile",
+    "ui",
+    "liquid-glass"
+  ],
   "type": "module",
   "main": "lib/index.js",
   "exports": {
@@ -11,9 +20,13 @@
     "./client": {
       "default": "./lib/client.js"
     },
+    "./cordis.patch.yml": "./cordis.patch.yml",
     "./package.json": "./package.json"
   },
   "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
     "client": {
       "inject": [
         "@deepseek-ai/dsh-client-runtime"
@@ -22,7 +35,25 @@
     }
   },
   "files": [
-    "lib"
+    "lib",
+    "src",
+    "cordis.patch.yml",
+    "README.md",
+    "LICENSE"
   ],
+  "scripts": {
+    "build": "npm run build:host && npm run build:client",
+    "build:host": "esbuild src/index.ts --bundle --platform=node --format=esm --outfile=lib/index.js",
+    "build:client": "esbuild src/client.ts --bundle --platform=browser --format=iife --outfile=lib/client.js --external:react",
+    "prepack": "npm run build",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@deepseek-ai/cordis": "^4.0.1",
+    "@deepseek-ai/dsh-client-runtime": "^0.1.0-rc.6",
+    "@types/react": "^18.3.0",
+    "esbuild": "^0.25.0",
+    "typescript": "^5.5.0"
+  },
   "license": "MIT"
 }

@@ -4,11 +4,14 @@ This file guides coding agents working on this repository.
 
 ## What this plugin is
 
-A local npm package (ESM) with a no-op Host anchor (`lib/index.js`) and the full
-implementation in the Client half (`lib/client.js`). Installed into the
-profile's `node_modules` and referenced by `name: 'dsh-mobile-glass'`.
+A publishable DSH bundle npm package (ESM) with TypeScript sources in `src/`.
+The Host anchor is `src/index.ts` (compiled to `lib/index.js`); the full
+implementation lives in the Client half `src/client.ts` (compiled to
+`lib/client.js`). It declares `dsh.bundle` + `cordis.patch.yml`, so it can be
+installed via `dsh plugin --profile web add ...` and auto-mounts as
+`name: 'dsh-mobile-glass'`.
 
-## Client half (`lib/client.js`)
+## Client half (`src/client.ts` → `lib/client.js`)
 
 - Loaded via `window.__ModuleLoader__.load({ id, factory })`; use
   `require('react')` inside the factory (react is a platform seed).
@@ -41,18 +44,33 @@ profile's `node_modules` and referenced by `name: 'dsh-mobile-glass'`.
   on the chat column, not the sidebar. If jitter persists, try temporarily
   dropping the sidebar `backdrop-filter` during the drag.
 
-## Deploy
+## Build / Deploy / Publish
+
+```sh
+npm install
+npm run build       # compile src/*.ts → lib/*.js
+npm run typecheck   # optional
+npm pack            # inspect publish tarball
+npm publish         # publish to npm (prepack runs build automatically)
+```
 
 Live copies: `~/.dsh/profiles/web/node_modules/dsh-mobile-glass/lib/*`.
-`lib/client.js` edits hot-reload on page refresh; `package.json` / new-package
+After editing `src/*.ts`, run `npm run build` first; the generated
+`lib/client.js` then hot-reloads on page refresh. `package.json` / new-package
 changes need a launchd restart:
 `launchctl kickstart -k gui/$(id -u)/com.yiran.dsh-web`.
 
 ## Gotchas
 
-- `package.json` must export BOTH `./client` and `./package.json`.
-- This is plain JavaScript with no TS/JSX/bundler transform; use
-  `React.createElement`-style semantics if you add React code.
+- `package.json` must export BOTH `./client` and `./package.json`; for bundle
+  installs it also needs `dsh.bundle.patch` and `./cordis.patch.yml` export.
+- Client source is TypeScript but must be built to a plain browser script
+  (`lib/client.js`) — no top-level ESM `import`/`export`; keep using
+  `window.__ModuleLoader__.load` + `require('react')` and
+  `React.createElement`-style semantics.
+- `src/client.ts` uses `ctx.get('slots') as any` because the installed slot
+  typings only expose the `root` slot; `shell.overlay` is a DSH shell contract
+  not represented in the local type declarations.
 - The settings overlay is a descendant of the sidebar column; its `position:
   fixed` only escapes to the viewport once the sidebar's `backdrop-filter` is
   removed (see the `:has(.VOzbGW_overlay)` rule).

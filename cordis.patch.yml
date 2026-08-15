@@ -1,0 +1,6 @@
+# dsh-mobile-glass bundle patch.
+# Installed via `dsh plugin --profile web add ...`; auto-mounts the plugin
+# without manually editing cordis.patch.yml.
+- insert:
+    - id: mobile-glass
+      name: dsh-mobile-glass
