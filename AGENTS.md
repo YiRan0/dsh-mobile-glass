@@ -17,14 +17,29 @@ profile's `node_modules` and referenced by `name: 'dsh-mobile-glass'`.
 - Drawer model: the sidebar is the bottom layer (fixed, never animates); the
   chat column slides right (top layer, `translateX`) to reveal it. The details
   drawer is a right slide-over toggled by `html[data-mob-details-open]`.
+- The floating ☰ lives in `shell.overlay`; when the drawer opens it is
+  translated by `var(--mobui-drawer)` so it follows the chat layer.
+- Drag-to-open: pointer capture + rAF-throttled transform + velocity/position
+  snap; `isHScrollable` skips the drag when the touch starts inside a
+  horizontally-scrollable element (wide table/code block). Inline
+  `transition: none` is NOT `!important` — the stylesheet transition IS
+  `!important` (needed to beat the shipped CSS), and during drag the inline
+  style is restored/removed via `removeProperty`.
+- Settings bottom sheet: `:has(.VOzbGW_overlay)` on the sidebar column drops its
+  `backdrop-filter` (freeing the fixed overlay from the containing block) and
+  lifts z-index to 70; `VOzbGW_panel` becomes a full-width bottom card with a
+  `@keyframes` slide-up; the nav is compacted to an icon rail.
 - `data-shell-overlay`, `data-sidebar-collapsed` are DSH shell DOM contracts the
-  CSS hooks into; changing the shell's DOM/data-attributes will break this.
+  CSS hooks into; `VOzbGW_*`, `wSkVaW_*`, `uV2eYG_*`, `nL4_yW_*`, `hHd-Xa_*`,
+  `W-zNGW_*` are shipped CSS-module class names — changing the shell's
+  DOM/classes will break these hooks.
 
 ## Known issue
 
 - Real-device drag can jitter (suspected the sidebar `backdrop-filter` real-time
   blur). `will-change` experiments were rolled back. Keep the reveal animation
-  on the chat column, not the sidebar.
+  on the chat column, not the sidebar. If jitter persists, try temporarily
+  dropping the sidebar `backdrop-filter` during the drag.
 
 ## Deploy
 
@@ -38,3 +53,6 @@ changes need a launchd restart:
 - `package.json` must export BOTH `./client` and `./package.json`.
 - This is plain JavaScript with no TS/JSX/bundler transform; use
   `React.createElement`-style semantics if you add React code.
+- The settings overlay is a descendant of the sidebar column; its `position:
+  fixed` only escapes to the viewport once the sidebar's `backdrop-filter` is
+  removed (see the `:has(.VOzbGW_overlay)` rule).
