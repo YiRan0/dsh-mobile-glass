@@ -23,18 +23,23 @@ npm run typecheck # 可选：TS 类型检查
 
 ### 方式一：通过 `dsh plugin` 安装（推荐）
 
-已发布到 npm 后：
+直接从 GitHub 安装（当前推荐，无需 npm）：
 
 ```sh
-dsh plugin --profile web add dsh-mobile-glass
+dsh plugin --profile web add github:YiRan0/dsh-mobile-glass
 ```
 
-本地目录 / GitHub / tarball 安装：
+也可以从本地目录或 tarball 安装：
 
 ```sh
 dsh plugin --profile web add ./dsh-mobile-glass
-dsh plugin --profile web add github:yourname/dsh-mobile-glass
 dsh plugin --profile web add ./dsh-mobile-glass-0.1.0.tgz
+```
+
+如果以后发布了 npm，也可以：
+
+```sh
+dsh plugin --profile web add dsh-mobile-glass
 ```
 
 装完重启 `dsh web`。
@@ -52,6 +57,10 @@ dsh plugin --profile web add ./dsh-mobile-glass-0.1.0.tgz
 重启 dsh web 服务；`lib/client.js` 改动刷新页面即热加载。
 
 ## 打包 / 发布
+
+npm **不是必须的**：当前通过 GitHub 仓库即可安装使用。
+
+如果以后想发布到 npm：
 
 ```sh
 npm install
