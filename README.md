@@ -10,6 +10,7 @@ DSH Web 移动端适配插件（≤1023px，桌面端 ≥1024px 零影响）：�
 - 用户消息右侧气泡、悬浮圆角输入框、模型选择器独立一行、发送键最右。
 - 设置面板底部卡片上滑覆盖（`VOzbGW_overlay/panel`），导航收成图标栏。
 - 头部清理：隐藏 session-log、tabs 与标题对齐、隐藏侧栏自带 toggle、better-sidebar 按钮与 ☰ 对齐。
+- **PWA**：插件自带 Service Worker + 增强 Manifest（Host 侧，零修改 DSH vendor）。
 
 ## 截图
 
@@ -36,6 +37,30 @@ dsh plugin --profile web add github:YiRan0/dsh-mobile-glass
 ## 使用
 
 安装后自动适配移动端，无需额外配置。
+
+## PWA（Service Worker + Manifest）
+
+插件 Host 侧通过 `webServer` 精确路由提供（不修改 DSH 任何 vendor 文件，升级不受影响）：
+
+| 路由 | 内容 |
+| --- | --- |
+| `/sw.js` | 插件内置 Service Worker（`Cache-Control: no-cache`，版本更新即时生效） |
+| `/manifest.webmanifest` | 增强 Manifest（standalone、主题色、PNG 图标），遮蔽 dist 自带那份 |
+| `/pwa/icon-{192,512,180}.png` | 应用图标（assets/pwa/，`immutable` 缓存） |
+
+首页由 index tap 注入 SW 注册脚本 + `apple-touch-icon` + `theme-color`，手机浏览器可"添加到主屏幕"独立运行。
+
+### 缓存策略
+
+- `/plugins/*?rev=`（rev = bundle 内容 SHA-1）与 `/assets/*`（哈希文件名）：**cache-first + 后台更新**——内容寻址 URL，升级/热更新后 rev 变化自动取新，不会吃到陈旧 bundle；解决 DSH 插件体系下每次刷新全量重下（当前约 26MB）的问题，公网链路二次访问秒开。
+- 导航：**network-first**，失败显示内置离线页（不做离线会话——数据在服务器）。
+- `/api/*`、`/plugins/events`（SSE/HMR）：**完全旁路**，绝不缓存。
+- SW `install` 时解析首页预缓存插件与静态资源（跳过 >5MB 单文件，超大插件按需缓存）。
+
+### 维护约定
+
+- 修改缓存策略后 bump `src/pwa.ts` 的 `SW_VERSION`，浏览器自动更新并清旧缓存。
+- 卸载插件后，已注册的 SW 会保留（路由消失但注册在浏览器侧），需手动清除一次：DevTools → Application → Service Workers → Unregister（或清除站点数据）。
 
 ## 已知问题
 

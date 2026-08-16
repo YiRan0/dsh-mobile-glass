@@ -1,33 +1,49 @@
-// src/index.ts
-import { readFile } from "node:fs/promises";
-import { fileURLToPath } from "node:url";
+/**
+ * dsh-mobile-glass — PWA surface constants (Host half).
+ *
+ * Served through webServer exact routes registered in src/index.ts:
+ *  - SW_SOURCE        → /sw.js            (text/javascript, Cache-Control: no-cache)
+ *  - MANIFEST_JSON    → /manifest.webmanifest (shadows the dist copy via exact-route priority)
+ *  - HEAD_EXTRA       → injected into </head> by an index tap (apple-touch-icon,
+ *                       theme-color, SW registration script)
+ *  - OFFLINE_HTML     → embedded in the SW; shown when a navigation cannot reach
+ *                       the server (honest offline page, not a fake offline shell)
+ *
+ * Cache policy (SW_SOURCE): only content-addressed URLs are ever cached —
+ * /assets/* hash names and /plugins/*?rev= (rev is the SHA-1 of the bundle
+ * content, so a changed bundle always gets a new URL and a stale entry can
+ * never be served). /api/* and /plugins/events (SSE/HMR) are bypassed
+ * entirely. Bump SW_VERSION on any policy change; the no-cache response header
+ * lets the browser pick the new script up promptly.
+ */
 
-// src/pwa.ts
-var SW_VERSION = "20260817a";
-var MANIFEST_JSON = JSON.stringify({
-  id: "/",
-  name: "DeepSeek Harness",
-  short_name: "DSH",
-  description: "DeepSeek Harness \u79FB\u52A8\u7AEF",
-  start_url: "/",
-  scope: "/",
-  display: "standalone",
-  orientation: "portrait",
-  theme_color: "#0f172a",
-  background_color: "#0f172a",
+export const SW_VERSION = '20260817a'
+
+export const MANIFEST_JSON = JSON.stringify({
+  id: '/',
+  name: 'DeepSeek Harness',
+  short_name: 'DSH',
+  description: 'DeepSeek Harness 移动端',
+  start_url: '/',
+  scope: '/',
+  display: 'standalone',
+  orientation: 'portrait',
+  theme_color: '#0f172a',
+  background_color: '#0f172a',
   icons: [
-    { src: "/pwa/icon-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
-    { src: "/pwa/icon-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
-    { src: "/pwa/icon-180.png", sizes: "180x180", type: "image/png", purpose: "any" }
+    { src: '/pwa/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
+    { src: '/pwa/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+    { src: '/pwa/icon-180.png', sizes: '180x180', type: 'image/png', purpose: 'any' }
   ]
-}, null, 2);
-var OFFLINE_HTML = `<!doctype html>
+}, null, 2)
+
+export const OFFLINE_HTML = `<!doctype html>
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#0f172a">
-<title>DSH \xB7 \u79BB\u7EBF</title>
+<title>DSH · 离线</title>
 <style>
   body{margin:0;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:#0f172a;color:#e2e8f0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;text-align:center;padding:24px}
   img{width:72px;height:72px;border-radius:18px}
@@ -38,26 +54,30 @@ var OFFLINE_HTML = `<!doctype html>
 </head>
 <body>
   <img src="/pwa/icon-192.png" alt="DSH">
-  <h1>\u79BB\u7EBF\u4E2D</h1>
-  <p>\u5F53\u524D\u7F51\u7EDC\u4E0D\u53EF\u7528\uFF0C\u6062\u590D\u540E\u81EA\u52A8\u91CD\u8FDE</p>
-  <button onclick="location.reload()">\u91CD\u8BD5</button>
+  <h1>离线中</h1>
+  <p>当前网络不可用，恢复后自动重连</p>
+  <button onclick="location.reload()">重试</button>
 </body>
-</html>`;
-var REGISTER_SCRIPT = `<script data-dsh-pwa>
+</html>`
+
+export const REGISTER_SCRIPT = `<script data-dsh-pwa>
 (function () {
   if (!('serviceWorker' in navigator)) return;
   window.addEventListener('load', function () {
     navigator.serviceWorker.register('/sw.js', { scope: '/', updateViaCache: 'none' }).catch(function () {});
   });
 })();
-</script>`;
-var HEAD_EXTRA = [
+</script>`
+
+/** Fragment injected before </head> by the index tap (idempotent via data-dsh-pwa). */
+export const HEAD_EXTRA = [
   '<link rel="apple-touch-icon" href="/pwa/icon-180.png">',
   '<meta name="theme-color" content="#0f172a">',
   REGISTER_SCRIPT
-].join("\n    ");
-var SW_SOURCE = [
-  "/* dsh-mobile-glass service worker \u2014 generated from src/pwa.ts */",
+].join('\n    ')
+
+export const SW_SOURCE = [
+  "/* dsh-mobile-glass service worker — generated from src/pwa.ts */",
   "'use strict';",
   "var VERSION = " + JSON.stringify(SW_VERSION) + ";",
   "var CACHE = 'dsh-pwa-' + VERSION;",
@@ -76,10 +96,10 @@ var SW_SOURCE = [
   "    .then(function (res) { return res.text(); })",
   "    .then(function (html) {",
   "      var urls = [];",
-  '      var re = /(?:src|href)="(\\/(?:assets|plugins)\\/[^"]+)"/g;',
+  "      var re = /(?:src|href)=\"(\\/(?:assets|plugins)\\/[^\"]+)\"/g;",
   "      var m;",
   "      while ((m = re.exec(html))) urls.push(m[1]);",
-  '      var re2 = /"url":"(\\/plugins\\/[^"]+)"/g;',
+  "      var re2 = /\"url\":\"(\\/plugins\\/[^\"]+)\"/g;",
   "      while ((m = re2.exec(html))) urls.push(m[1]);",
   "      return urls;",
   "    })",
@@ -132,17 +152,17 @@ var SW_SOURCE = [
   "  if (url.origin !== self.location.origin) return;",
   "  var path = url.pathname;",
   "",
-  "  /* \u9274\u6743/\u5B9E\u65F6/\u52A8\u6001\u6D41\u91CF\uFF1A\u5B8C\u5168\u65C1\u8DEF\uFF08\u4E0D respondWith\uFF0C\u6D4F\u89C8\u5668\u76F4\u8FDE\uFF09 */",
+  "  /* 鉴权/实时/动态流量：完全旁路（不 respondWith，浏览器直连） */",
   "  if (path === '/api' || path.indexOf('/api/') === 0) return;",
   "  if (path === '/plugins/events') return;",
   "",
-  "  /* \u5BFC\u822A\uFF1Anetwork-first\uFF0C\u5931\u8D25\u56DE\u9000\u79BB\u7EBF\u9875 */",
+  "  /* 导航：network-first，失败回退离线页 */",
   "  if (req.mode === 'navigate') {",
   "    event.respondWith(fetch(req).catch(function () { return caches.match('/offline'); }));",
   "    return;",
   "  }",
   "",
-  "  /* \u5185\u5BB9\u5BFB\u5740\u9759\u6001\u8D44\u6E90\uFF1Acache-first + \u540E\u53F0\u66F4\u65B0 */",
+  "  /* 内容寻址静态资源：cache-first + 后台更新 */",
   "  var cacheable = path.indexOf('/assets/') === 0",
   "    || (path.indexOf('/plugins/') === 0 && path.indexOf('/plugins/events') !== 0)",
   "    || path.indexOf('/pwa/') === 0",
@@ -169,62 +189,4 @@ var SW_SOURCE = [
   "    })",
   "  );",
   "});"
-].join("\n");
-
-// src/index.ts
-var name = "dsh-mobile-glass";
-var inject = ["webServer"];
-var ICON_SIZES = ["192", "512", "180"];
-function apply(ctx) {
-  const ws = ctx.webServer;
-  const effect = ctx.effect.bind(ctx);
-  const readIcon = (size) => readFile(fileURLToPath(new URL(`../assets/pwa/icon-${size}.png`, import.meta.url)));
-  effect(() => ws.register({
-    kind: "exact",
-    path: "/sw.js",
-    handler: (_req, res) => {
-      res.writeHead(200, {
-        "content-type": "text/javascript; charset=utf-8",
-        "cache-control": "no-cache"
-      });
-      res.end(SW_SOURCE);
-    }
-  }), "mobile-glass: /sw.js");
-  effect(() => ws.register({
-    kind: "exact",
-    path: "/manifest.webmanifest",
-    handler: (_req, res) => {
-      res.writeHead(200, { "content-type": "application/manifest+json" });
-      res.end(MANIFEST_JSON);
-    }
-  }), "mobile-glass: /manifest.webmanifest");
-  for (const size of ICON_SIZES) {
-    effect(() => ws.register({
-      kind: "exact",
-      path: `/pwa/icon-${size}.png`,
-      handler: async (_req, res) => {
-        try {
-          const body = await readIcon(size);
-          res.writeHead(200, {
-            "content-type": "image/png",
-            "cache-control": "public, max-age=31536000, immutable"
-          });
-          res.end(body);
-        } catch {
-          res.writeHead(404);
-          res.end();
-        }
-      }
-    }), `mobile-glass: /pwa/icon-${size}.png`);
-  }
-  effect(() => ws.tapIndex((html) => {
-    if (html.includes("data-dsh-pwa")) return html;
-    if (!html.includes("</head>")) return html + HEAD_EXTRA;
-    return html.replace("</head>", HEAD_EXTRA + "</head>");
-  }), "mobile-glass: pwa index tap");
-}
-export {
-  apply,
-  inject,
-  name
-};
+].join('\n')
