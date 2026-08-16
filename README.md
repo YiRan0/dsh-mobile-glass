@@ -1,6 +1,6 @@
 # dsh-mobile-glass
 
-DSH Web 移动端适配插件（≤1023px，桌面端 ≥1024px 零影响）：液态玻璃视觉、聊天页在上/侧栏在下的 reveal 抽屉、拖动手势、设置面板底部卡片上滑、composer 与 header 修复。
+DSH Web 移动端适配插件（≤1023px，桌面端 ≥1024px 零影响）：聊天页在上/侧栏在下的 reveal 抽屉、拖动手势、设置面板底部卡片上滑、composer 与 header 修复。
 
 ## 功能
 
@@ -10,7 +10,6 @@ DSH Web 移动端适配插件（≤1023px，桌面端 ≥1024px 零影响）：�
 - 用户消息右侧气泡、悬浮圆角输入框、模型选择器独立一行、发送键最右。
 - 设置面板底部卡片上滑覆盖（`VOzbGW_overlay/panel`），导航收成图标栏。
 - 头部清理：隐藏 session-log、tabs 与标题对齐、隐藏侧栏自带 toggle、better-sidebar 按钮与 ☰ 对齐。
-- 液态玻璃质感（`backdrop-filter` + `saturate` + 高光描边）。
 
 ## 截图
 
