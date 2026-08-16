@@ -37,6 +37,7 @@
   "files": [
     "lib",
     "src",
+    "assets",
     "cordis.patch.yml",
     "README.md",
     "LICENSE"

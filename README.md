@@ -13,6 +13,20 @@ DSH Web 移动端适配插件（≤1023px，桌面端 ≥1024px 零影响）：�
 - 头部清理：隐藏 session-log、tabs 与标题对齐、隐藏侧栏自带 toggle、better-sidebar 按钮与 ☰ 对齐。
 - 液态玻璃质感（`backdrop-filter` + `saturate` + 高光描边）。
 
+## 截图
+
+| 移动端主界面 | 侧栏抽屉 |
+| --- | --- |
+| ![移动端主界面](assets/mobile-main.png) | ![侧栏抽屉](assets/mobile-drawer.png) |
+
+| 悬浮输入框 | 设置底部卡片 |
+| --- | --- |
+| ![悬浮输入框](assets/mobile-composer.png) | ![设置底部卡片](assets/mobile-settings.png) |
+
+| 详情抽屉 | 桌面端（零影响） |
+| --- | --- |
+| ![详情抽屉](assets/mobile-details.png) | ![桌面端](assets/desktop-unchanged.png) |
+
 ## 安装
 
 ```sh
