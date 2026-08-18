@@ -71,7 +71,10 @@ window.__ModuleLoader__.load({
     backdrop-filter: blur(22px) saturate(180%);
     -webkit-backdrop-filter: blur(22px) saturate(180%);
   }
-  /* composer: glass floating card, wrapping tool row, model on own line */
+  /* composer: glass floating card — compact pill by default (never eats the
+     whole screen), expands to full width while focused; the model selector
+     shares the tool row with the shield/dropdown controls; the input area
+     starts at one line and auto-grows with content (native mirror) */
   .uV2eYG_card {
     border-radius: 20px !important;
     background: var(--dsw-alias-bg-layer-1);
@@ -79,12 +82,28 @@ window.__ModuleLoader__.load({
     backdrop-filter: blur(22px) saturate(180%);
     -webkit-backdrop-filter: blur(22px) saturate(180%);
     box-shadow: 0 14px 40px rgba(0, 0, 0, .12), inset 0 1px 0 rgba(255, 255, 255, .5) !important;
+    max-width: min(86%, 460px) !important;
+    transition: max-width .32s cubic-bezier(.32, .72, .24, 1), height .32s cubic-bezier(.32, .72, .24, 1);
   }
-  .uV2eYG_row { flex-wrap: wrap; gap: 6px; }
-  /* trailing (context / model / send): wrap internally, send stays far right */
-  .uV2eYG_trailing { flex-wrap: wrap; justify-content: flex-end; flex: 1; }
-  ._7KE1Ra_root { order: 99; flex-basis: 100%; }
-  ._7KE1Ra_trigger { max-width: 100%; }
+  .uV2eYG_card:focus-within { max-width: 100% !important; }
+  .uV2eYG_row { flex-wrap: nowrap; gap: 6px; }
+  /* trailing (context / model / send): one row, never wraps */
+  .uV2eYG_trailing { flex-wrap: nowrap; justify-content: flex-end; flex: 1; min-width: 0; }
+  /* input area starts compact (one line) and auto-grows as the draft grows;
+     while focused it opens to ~2.5 lines so the height visibly expands on
+     focus and contracts on blur (content always wins — a long draft keeps
+     its full height even when unfocused) */
+  .uV2eYG_mirror { min-height: 24px !important; }
+  .uV2eYG_card:focus-within .uV2eYG_mirror { min-height: 60px !important; }
+  /* model selector stays inside trailing, sharing the tool row */
+  ._7KE1Ra_root { flex: 0 1 auto; min-width: 0; }
+  ._7KE1Ra_trigger { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  /* while the card is narrowed (unfocused), tighten the trailing row and
+     ellipsize the model selector so the row still fits */
+  @container (max-width: 360px) {
+    .uV2eYG_trailing { gap: 6px; }
+    ._7KE1Ra_trigger { max-width: 128px; }
+  }
   body { overflow-x: hidden; }
 }
 /* settings: bottom-sheet card that slides up and covers the chat (mobile only).
@@ -323,12 +342,54 @@ window.__ModuleLoader__.load({
 				const meta = document.querySelector('meta[name="viewport"]');
 				const prev = meta ? meta.getAttribute('content') : null;
 				if (meta) meta.setAttribute('content', 'width=device-width, initial-scale=1, viewport-fit=cover');
+
+				// --- composer height animation: CSS can't tween an auto height, so
+				// FLIP the card — lock to the old height, then tween to the newly
+				// measured height whenever its content changes (draft auto-grow,
+				// focus reflow), matching the max-width transition. ---
+				let animCard: Element | null = null;
+				let animRO: ResizeObserver | null = null;
+				let animBusy = false;
+				let animPrev = 0;
+				const attachHeightAnim = (card: Element) => {
+					if (animRO) { animRO.disconnect(); animRO = null; }
+					animCard = card;
+					animPrev = card.getBoundingClientRect().height;
+					animRO = new ResizeObserver(() => {
+						if (animBusy || !animCard || !animCard.isConnected) return;
+						const cur = animCard.getBoundingClientRect().height;
+						if (Math.abs(cur - animPrev) < 1) return;
+						animBusy = true;
+						(animCard as HTMLElement).style.height = animPrev + 'px';
+						requestAnimationFrame(() => {
+							if (!animCard || !animCard.isConnected) { animBusy = false; return; }
+							const el = animCard as HTMLElement;
+							el.style.transition = 'height .32s cubic-bezier(.32, .72, .24, 1), max-width .32s cubic-bezier(.32, .72, .24, 1)';
+							el.style.height = cur + 'px';
+							animPrev = cur;
+							later(() => {
+								if (el.isConnected) { el.style.height = ''; el.style.transition = ''; }
+								animBusy = false;
+							}, 380);
+						});
+					});
+					animRO.observe(card);
+				};
+				const composerFinder = new MutationObserver(() => {
+					const card = document.querySelector('.uV2eYG_card');
+					if (card && card !== animCard) attachHeightAnim(card);
+					else if (!card && animRO) { animRO.disconnect(); animRO = null; animCard = null; animPrev = 0; }
+				});
+				composerFinder.observe(document.body, { childList: true, subtree: true });
+
 				document.addEventListener('click', onClick, true);
 				window.addEventListener('pointerdown', onPointerDown, true);
 				window.addEventListener('pointermove', onPointerMove, true);
 				window.addEventListener('pointerup', onPointerUp, true);
 				window.addEventListener('pointercancel', onPointerCancel, true);
 				return () => {
+					if (animRO) animRO.disconnect();
+					composerFinder.disconnect();
 					document.removeEventListener('click', onClick, true);
 					window.removeEventListener('pointerdown', onPointerDown, true);
 					window.removeEventListener('pointermove', onPointerMove, true);
