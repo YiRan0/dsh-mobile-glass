@@ -17,7 +17,7 @@
  * lets the browser pick the new script up promptly.
  */
 
-export const SW_VERSION = '20260817a'
+export const SW_VERSION = '20260817b'
 
 export const MANIFEST_JSON = JSON.stringify({
   id: '/',
@@ -156,9 +156,26 @@ export const SW_SOURCE = [
   "  if (path === '/api' || path.indexOf('/api/') === 0) return;",
   "  if (path === '/plugins/events') return;",
   "",
-  "  /* 导航：network-first，失败回退离线页 */",
+  "  /* 导航：stale-while-revalidate —— 立即返回缓存壳，后台刷新 index；",
+  "     无缓存才走网络，仍失败回退离线页 */",
   "  if (req.mode === 'navigate') {",
-  "    event.respondWith(fetch(req).catch(function () { return caches.match('/offline'); }));",
+  "    event.respondWith(",
+  "      caches.open(CACHE).then(function (cache) {",
+  "        return cache.match(req).then(function (cached) {",
+  "          var network = fetch(req).then(function (res) {",
+  "            if (res && res.ok) cache.put(req, res.clone());",
+  "            return res;",
+  "          }).catch(function () { return null; });",
+  "          if (cached) {",
+  "            network.then(function () {});",
+  "            return cached;",
+  "          }",
+  "          return network.then(function (res) {",
+  "            return res || caches.match('/offline');",
+  "          });",
+  "        });",
+  "      })",
+  "    );",
   "    return;",
   "  }",
   "",
